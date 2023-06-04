@@ -2,6 +2,7 @@ import random
 
 R = 5
 C = 4
+board = [[None for x in range(C)] for y in range(R)]
 
 dy = [-1, 0, 1, 0]
 dx = [0, 1, 0, -1]
@@ -17,7 +18,21 @@ def rng(a, b):
 def in_bounds(x, y):
     return x >= 0 and x < R and y >= 0 and y < C
 
-def place_pieces(num_blues, num_yellows):
+def try_n_times(n, func): # extremely lazy way to do this, its like janky backtracking but the board is only 5x4
+    for _ in range(n):
+        if func(): 
+            return True
+    return False
+
+def place_red_piece():
+    while True:
+        x = rng(0, R-2)
+        y = rng(0, C-2)
+        if not (x == 3 and y == 1):
+            board[x][y] = board[x+1][y] = board[x][y+1] = board[x+1][y+1] = 'R'
+            break
+
+def place_blue_yellow_pieces(num_blues, num_yellows):
     def place_blue_piece():
         x = rng(0, R-1)
         y = rng(0, C-1)
@@ -31,12 +46,8 @@ def place_pieces(num_blues, num_yellows):
         return False
     
     for j in range(num_blues):
-        blue_placed = False
-        for _ in range(100):
-            blue_placed = place_blue_piece()
-            if blue_placed:
-                break
-        if not blue_placed:
+        res = try_n_times(100, place_blue_piece)
+        if not res:
             return False
 
     for i in range(num_yellows):
@@ -47,30 +58,20 @@ def place_pieces(num_blues, num_yellows):
 
     return True
 
-board = [[None for x in range(C)] for y in range(R)]
+while True:
+    place_red_piece()
 
-pieces_placed = False
-while not pieces_placed:
     num_blues = rng(0, 5)       # 2x1 pieces
     num_yellows = rng(0, 12)    # 1x1 pieces
 
-    # Choose random spot for the red piece (2x2)
-    while True:
-        x = rng(0, R-2)
-        y = rng(0, C-2)
-        if not (x == 3 and y == 1):
-            board[x][y] = board[x+1][y] = board[x][y+1] = board[x+1][y+1] = 'R'
-            break
-
     # Randomly place the blue and yellow pieces on the board
-    for t in range(100):
-        pieces_placed = place_pieces(num_blues, num_yellows)
-        if pieces_placed:
-            break
-    
-    if pieces_placed:
+    res = try_n_times(100, lambda: place_blue_yellow_pieces(num_blues, num_yellows))
+    if res:
         break
 
+# board created
 print_board(board)
+
+# start game
 
 # https://www.youtube.com/watch?v=uGmMsGOcBB0
